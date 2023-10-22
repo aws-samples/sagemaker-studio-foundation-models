@@ -1,0 +1,10 @@
+boto3==1.26.73
+pandas==1.5.3
+Pillow==9.4.0
+streamlit
+torch==1.13.1
+torchvision==0.14.1
+langchain
+typing_extensions==4.7.1 
+sagemaker
+numexpr
