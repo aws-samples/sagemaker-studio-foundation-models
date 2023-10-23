@@ -1,5 +1,12 @@
 boto3
+botocore==1.31.56
+pyqt5==5.15
 langchain
 sagemaker
-ipython
-
+ipython<8.0.0,>=7.31.1
+pyqtwebengine==5.15
+spyder==5.3.3
+bokeh<2.5.0,>=2.4.0
+pylint<3.0,>=2.5.0
+docutils<0.17,>=0.10
+s3transfer<0.8.0,>=0.7.0
