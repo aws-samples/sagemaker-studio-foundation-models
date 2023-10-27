@@ -20,36 +20,33 @@ class ContentHandler(LLMContentHandler):
     content_type = "application/json"
     accepts = "application/json"
 
-    def transform_input(self, prompt: str, model_kwargs: dict) -> bytes:
+    def transform_input(self, prompt, model_kwargs):
         input_str = json.dumps({"inputs" : [[
         {"role" : "user", "content" : prompt}]],
         "parameters" : {**model_kwargs}})
         return input_str.encode('utf-8')
     
-    def transform_output(self, output: bytes) -> str:
+    def transform_output(self, output):
         response_json = json.loads(output.read().decode("utf-8"))
         return response_json[0]["generation"]["content"]
 
 class OutputParser(AgentOutputParser):
 
-    def parse(self, text: str):
+    def parse(self, response):
         try:
-            parsed=parse_json_markdown(text)
-            action, action_input = parsed["action"], parsed["action_input"]
-            if action == "Final Answer":
-                return AgentFinish({"output": action_input}, text)
+            parsed_response=parse_json_markdown(response)
+            step, step_input = parsed_response["step"], parsed_response["step_input"]
+            if step == "Final Answer":
+                return AgentFinish({"output": step_input}, response)
             else:
-                return AgentAction(action, action_input, text)
+                return AgentAction(step, step_input, response)
         except:
-            return AgentFinish({"output": text}, text)
-        
-    @property
-    def _type(self) -> str:
-        return "conversational_chat"
+            return AgentFinish({"output": response}, response)
         
     def get_format_instructions(self):
         return FORMAT_INSTRUCTIONS
-    
+
+parser = OutputParser()
 
 st.set_page_config(page_title="LangChain: Chat with search and math", page_icon="🦜")
 st.title("🦜 LangChain: Chat with search and math")
@@ -73,77 +70,75 @@ tools = load_tools(["llm-math", "wikipedia"], llm=llm)
 
 agent = initialize_agent(
     agent="chat-conversational-react-description",
-    tools=tools,
-    llm=llm,
-    verbose=True,
     memory=memory,
+    llm=llm,
+    tools=tools,
+    verbose=True,
     agent_kwargs={
         "output_parser": parser
     }
 )
 
-system_message = """
+system_message = system_message = """
 
-<>\n Assistant is a JSON builder designed to assist with a wide range of tasks.
+<>\n Assistant is designed to build JSON and answer a wide variety of User questions.
 
-Assistant is able to respond to the User and use tools using JSON strings that contain "action" and "action_input" parameters.
-
-All of Assistant's communication is performed using this JSON format.
+Assistant must use JSON strings that contain "step" and "step_input" parameters. All of Assistant's communication is performed using this JSON format.
 
 Tools available to Assistant are:
 
-- "Wikipedia": Useful when you need a summary of a person, place, company, historical event, or other subject. Input is typically a noun, like a person, place, company, historical event, or other subject.
-  - To use the wikipedia tool, Assistant should write like so before getting the response and returning to the user:
+- "Wikipedia": Useful when you need a summary of a person, place, historical event, or other subject. Input is typically a noun, like a person, place, historical event, or another subject.
+  - To use the wikipedia tool, Assistant should format the JSON like the following before getting the response and returning to the user:
     ```json
-    {{"action": "Wikipedia",
-      "action_input": "Statue of Liberty"}}
+    {{"step": "Wikipedia",
+      "step_input": "Statue of Liberty"}}
     ```
-- "Calculator": Useful for when you need to answer questions about math. Only use this if the input would contain numbers.
-  - To use the calculator tool, Assistant should write like so before getting the response and returning to the user:
+- "Calculator": Useful for when you need to answer questions about math. Input is one or more number combined with one or more math operations (addition, subtraction, multiplation, division, square root, exponetnial, and more).
+  - To use the calculator tool, Assistant should format the JSON like the following so before getting the response and returning to the user:
     ```json
-    {{"action": "Calculator",
-      "action_input": "sqrt(9)"}}
+    {{"step": "Calculator",
+      "step_input": "24*189"}}
     ```
 
-Here are some previous conversations between the Assistant and User:
+Here is the set of previous interactions between the User and Assistant:
 
-User: Hey how are you doing?
-Assistant: ```json
-{{"action": "Final Answer",
- "action_input": "I'm good thanks, how are you?"}}
+User: Hi!
+Assistant: ```
+{{"step": "Final Answer",
+ "step_input": "Hello! How can I assist today?"}}
 ```
-User: What is the square root of 16?
-Assistant: ```json
-{{"action": "Calculator",
- "action_input": "sqrt(16)"}}
+User: What is 9 cubed?
+Assistant: ```
+{{"step": "Calculator",
+ "step_input": "9**3"}}
 ```
-User: 2.0
-Assistant: ```json
-{{"action": "Final Answer",
- "action_input": "It looks like the answer is 2."}}
-```
-User: Can you tell me 4 to the power of 2?
-Assistant: ```json
-{{"action": "Calculator",
- "action_input": "4**2"}}
-```
-User: 16.0
-Assistant: ```json
-{{"action": "Final Answer",
- "action_input": "It looks like the answer is 16."}}
+User: 729
+Assistant: ```
+{{"step": "Final Answer",
+ "step_input": "The answer to your question is 729."}}
 ```
 User: Can you tell me about the Statue of Liberty?
-Assistant: ```json
-{{"action": "Wikipedia",
- "action_input": "Statue of Liberty"}}
+Assistant: ```
+{{"step": "Wikipedia",
+ "step_input": "Statue of Liberty"}}
 ```
 User: The Statue of Liberty is a colossal neoclassical sculpture on Liberty Island in New York Harbor in New York City, in the United States. The copper statue, a gift from the people of France, was designed by French sculptor Frédéric Auguste Bartholdi and its metal framework was built by Gustave Eiffel.
-Assistant: ```json
-{{"action": "Final Answer",
- "action_input": "Sure! The Statue of Liberty is a colossal neoclassical sculpture on Liberty Island in New York Harbor in New York City, in the United States. The copper statue, a gift from the people of France, was designed by French sculptor Frédéric Auguste Bartholdi and its metal framework was built by Gustave Eiffel."}}
+Assistant: ```
+{{"step": "Final Answer",
+ "step_input": "Sure! The Statue of Liberty is a colossal neoclassical sculpture on Liberty Island in New York Harbor in New York City, in the United States. The copper statue, a gift from the people of France, was designed by French sculptor Frédéric Auguste Bartholdi and its metal framework was built by Gustave Eiffel."}}
+```
+User: What is the square root of 81?
+Assistant: ```
+{{"step": "Calculator",
+ "step_input": "sqrt(81)"}}
+```
+User: 9
+Assistant: ```
+{{"step": "Final Answer",
+ "step_input": "The answer to your question is 9."}}
 ```
 
-Assistant should use a tool only if needed, but if the assistant does use a tool, the result of the tool must always be returned back to the user with a "Final Answer" format. Only use the calculator if the 'action_input' includes numbers. \n<>\n\n
+Assistant should use a tool only if needed, but if the assistant does use a tool, the result of the tool must always be returned back to the user with a "Final Answer" step. Only use the calculator if the 'step_input' includes numbers. \n<>\n\n
 """
 
 zero_shot = agent.agent.create_prompt(
@@ -152,7 +147,7 @@ zero_shot = agent.agent.create_prompt(
 )
 agent.agent.llm_chain.prompt = zero_shot
 
-agent.agent.llm_chain.prompt.messages[2].prompt.template = "[INST] Respond in JSON with 'action' and 'action_input' values until you return an 'action': 'final answer', along with the 'action_input'. [/INST] \nUser: {input}"
+agent.agent.llm_chain.prompt.messages[2].prompt.template = "[INST] Respond in JSON with 'step' and 'step_input' values until you return an 'step': 'Final Answer', along with the 'step_input'. [/INST] \nUser: {input}"
 
 
 if len(msgs.messages) == 0 or st.sidebar.button("Reset chat history"):
