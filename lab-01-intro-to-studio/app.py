@@ -16,6 +16,10 @@ f = open("endpoint_name.txt", "r")
 endpoint_name = f.read()
 f.close()
 
+f = open("custom_attributes.txt", "r")
+custom_attributes = f.read()
+f.close()
+
 class ContentHandler(LLMContentHandler):
     content_type = "application/json"
     accepts = "application/json"
@@ -62,7 +66,7 @@ llm=SagemakerEndpoint(
              endpoint_name=endpoint_name, 
              region_name=session.Session().boto_region_name, 
              model_kwargs={"max_new_tokens": 700, "top_p": 0.9, "temperature": 0.6},
-             endpoint_kwargs={"CustomAttributes": 'accept_eula=true'},
+             endpoint_kwargs={"CustomAttributes": custom_attributes},
              content_handler=content_handler
          )
 
