@@ -16,7 +16,7 @@ f = open("endpoint_name.txt", "r")
 endpoint_name = f.read()
 f.close()
 
-f = open("custom_attributes.txt", "r")
+f = open("custom_attribute.txt", "r")
 custom_attributes = f.read()
 f.close()
 
@@ -145,11 +145,11 @@ Assistant: ```
 Assistant should use a tool only if needed, but if the assistant does use a tool, the result of the tool must always be returned back to the user with a "Final Answer" step. Only use the calculator if the 'step_input' includes numbers. \n<>\n\n
 """
 
-zero_shot = agent.agent.create_prompt(
+few_shot = agent.agent.create_prompt(
     system_message=system_message,
     tools=tools
 )
-agent.agent.llm_chain.prompt = zero_shot
+agent.agent.llm_chain.prompt = few_shot
 
 agent.agent.llm_chain.prompt.messages[2].prompt.template = "[INST] Respond in JSON with 'step' and 'step_input' values until you return an 'step': 'Final Answer', along with the 'step_input'. [/INST] \nUser: {input}"
 
