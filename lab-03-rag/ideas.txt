@@ -1,5 +1,0 @@
-> Switch from Chroma to OS
-> EMR Serverless **
-> Show pre and post Opensearch
-> Make it conversational bot
-> Gradio >> Streamlit
