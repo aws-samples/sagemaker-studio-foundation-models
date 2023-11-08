@@ -6,15 +6,15 @@ GREEN='\033[1;32m'
 NC='\033[0m'
 S3_PATH=$1
 
-# Run the Streamlit app and save the output to "temp.txt"
-streamlit run app.py --server.runOnSave true > temp.txt & 
+# Run the Streamlit app and save the output to "temp_chat.txt"
+streamlit run chat_app.py --server.runOnSave true > temp_chat.txt & 
 
 # Read the text file using cat
 echo "Getting the URL to view your Streamlit app in the browser"
 
 # Extract the last four digits of the port number from the Network URL
 sleep 5
-PORT=$(grep "Network URL" temp.txt | awk -F':' '{print $NF}' | awk '{print $1}' | tail -c 5)
+PORT=$(grep "Network URL" temp_chat.txt | awk -F':' '{print $NF}' | awk '{print $1}' | tail -c 5)
 echo -e "${CYAN}${CURRENTDATE}: [INFO]:${NC} Port Number ${PORT}" 
 
 

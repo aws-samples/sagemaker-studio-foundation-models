@@ -5,3 +5,4 @@ typing_extensions==4.7.1
 wikipedia
 sagemaker
 numexpr
+opensearch-py==2.3.2
