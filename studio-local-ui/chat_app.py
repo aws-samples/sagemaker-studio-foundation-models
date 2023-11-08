@@ -1,4 +1,3 @@
-from langchain.vectorstores import OpenSearchVectorSearch
 from langchain.callbacks import StreamlitCallbackHandler
 from langchain.memory.chat_message_histories import StreamlitChatMessageHistory
 from langchain.llms import SagemakerEndpoint
@@ -72,9 +71,6 @@ llm=SagemakerEndpoint(
          )
 
 tools = load_tools(["llm-math", "wikipedia"], llm=llm)
-
-
-# ------- CHAT ONLY
 
 agent = initialize_agent(
     agent="chat-conversational-react-description",
@@ -155,7 +151,7 @@ few_shot = agent.agent.create_prompt(
 )
 agent.agent.llm_chain.prompt = few_shot
 
-agent.agent.llm_chain.prompt.messages[2].prompt.template = "[INST] Only answer the question asked and Respond in JSON with 'step' and 'step_input' values until you return an 'step': 'Final Answer', along with the 'step_input'. [/INST] \nUser: {input}"
+agent.agent.llm_chain.prompt.messages[2].prompt.template = "[INST] Respond in JSON with 'step' and 'step_input' values until you return an 'step': 'Final Answer', along with the 'step_input'. [/INST] \nUser: {input}"
 
 
 if len(msgs.messages) == 0 or st.sidebar.button("Reset chat history"):
