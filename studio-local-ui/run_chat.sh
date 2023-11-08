@@ -7,7 +7,7 @@ NC='\033[0m'
 S3_PATH=$1
 
 # Run the Streamlit app and save the output to "temp_chat.txt"
-streamlit run app.py --server.runOnSave true > temp_chat.txt & 
+streamlit run chat_app.py --server.runOnSave true > temp_chat.txt & 
 
 # Read the text file using cat
 echo "Getting the URL to view your Streamlit app in the browser"
