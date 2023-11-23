@@ -1,6 +1,6 @@
 """
 python3 fine_tune_llama2_trn1.py \
-    --role=arn:aws:iam::914153712152:role/workshop-studio-v2-cfn-OSE-EMR-SageMakerExecutionRole
+    --role=arn:aws:iam::679834453349:role/workshop-studio-v14-cfn-OSE-EMR-SageMakerExecutionRole \
     --dataset_s3_dest=default \
     --dataset_name=databricks/databricks-dolly-15k \
     --js_hf_model_id=meta-textgenerationneuron-llama-2-13b \
