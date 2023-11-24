@@ -1,11 +1,9 @@
 """
 python3 fine_tune_llama2_trn1.py \
-    --role=arn:aws:iam::679834453349:role/workshop-studio-v14-cfn-OSE-EMR-SageMakerExecutionRole \
-    --dataset_s3_dest=default \
     --dataset_name=databricks/databricks-dolly-15k \
     --js_hf_model_id=meta-textgenerationneuron-llama-2-13b \
     --js_hf_model_version=1.* \
-    --max_steps=5 \
+    --max_steps=2 \
     --lr=0.0001 \
     --batch_size=1000 \
     --instance_type=ml.trn1.32xlarge
@@ -16,10 +14,10 @@ import uuid
 import argparse
 import pyfiglet
 import pprint
+import botocore
 import sagemaker
 import boto3
 import json
-import requests
 from sagemaker.s3 import S3Uploader
 from datasets import load_dataset
 from sagemaker import hyperparameters
@@ -50,21 +48,22 @@ print(ascii_banner)
 
 session_uuid = uuid.uuid4()
 
+sts_client = botocore.session.Session().create_client("sts")
+role_arn = sts_client.get_caller_identity().get("Arn")
+# conver assumed role to just role arn
+role = role_arn.replace('assumed-role', 'role').replace('/SageMaker', '')
+
+print(f"Using role ---> ", role)
+
 
 def parse_args():
     # Create the parser
     parser = argparse.ArgumentParser(description="Example script to demonstrate argparse usage.")
 
     parser.add_argument(
-        "--role", 
-        type=str, 
-        help="SageMaker Execution Role", 
-    )
-
-    parser.add_argument(
         "--dataset_s3_dest", 
         type=str, 
-        default="default",
+        default=None,
         help="Dataset S3 destination, ex: s3://my-example-bucket/my-prefix/, set default to use sagemaker bucket",
     )
 
@@ -136,7 +135,7 @@ def upload_to_s3_uri(destination_s3_uri, task):
 
     local_data_file = f"dolly/processed-train-{task}.jsonl"
 
-    if destination_s3_uri == "default":
+    if destination_s3_uri is None:
         output_bucket = sagemaker.Session().default_bucket()
         destination_s3_uri = f"s3://{output_bucket}/fine-tuning/{session_uuid}/dolly_dataset"
 
@@ -148,6 +147,7 @@ def upload_to_s3_uri(destination_s3_uri, task):
 
 
 def prepare_dataset(dataset_name, destination_s3_uri):
+
     dolly_dataset = load_dataset(
         dataset_name, 
         split="train[:10%]"
@@ -219,11 +219,13 @@ def fine_tune(user_args, llama_eula):
         model_version=user_args.js_hf_model_version,
         hyperparameters=sess_hyperparams,
         environment={"accept_eula": llama_eula}, 
-        role=user_args.role
+        role=role
     )
 
     estimator.fit(
-        {"train": destination_s3_uri},
+        {
+            "train": destination_s3_uri
+        },
         wait=True
     )
 

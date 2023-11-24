@@ -1,6 +1,14 @@
+"""
+python3 deploy_llama2_inf2.py \
+    --endpoint_name=ft-meta-llama2-13b-neuron-chat-tg-ep \
+    --instance_type=ml.inf2.24xlarge
+"""
+
 import argparse
 import pyfiglet
 import pprint
+from datetime import datetime
+import botocore
 import sagemaker
 from sagemaker.estimator import Estimator
 
@@ -12,19 +20,20 @@ ascii_banner = pyfiglet.figlet_format("Welcome to SageMaker Studio GenAI Worksho
 print(ascii_banner)
 
 
+sts_client = botocore.session.Session().create_client("sts")
+role_arn = sts_client.get_caller_identity().get("Arn")
+# conver assumed role to just role arn
+role = role_arn.replace('assumed-role', 'role').replace('/SageMaker', '')
+print(f"Using role ---> ", role)
+
+
 # Create a SageMaker session
 sess = sagemaker.Session()
 
 
 def parse_args():
     # Create the parser
-    parser = argparse.ArgumentParser(description="Example script to demonstrate argparse usage.")
-
-    parser.add_argument(
-        "--role", 
-        type=str, 
-        help="SageMaker Execution Role", 
-    )
+    parser = argparse.ArgumentParser(description="Deploy our fine-tuned model to a sagemaker endpoint")
 
     parser.add_argument(
         "--endpoint_name", 
@@ -68,7 +77,7 @@ def deploy(user_args):
 
     # deploy model
     finetuned_predictor = estimator.deploy(
-        endpoint_name=user_args.endpoint_name,
+        endpoint_name=f"{user_args.endpoint_name}-{datetime.now().strftime('%y%m%d%H%M%S')}",
         instance_type=user_args.instance_type,
         initial_instance_count=1,
         wait=True
