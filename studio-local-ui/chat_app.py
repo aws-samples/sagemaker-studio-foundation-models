@@ -11,6 +11,24 @@ import streamlit as st
 from sagemaker import session
 import json
 import re
+from typing import Dict, List
+
+def format_messages(messages: List[Dict[str, str]]) -> List[str]:
+    """
+    Format messages for Llama-2 chat models.
+    
+    The model only supports 'system', 'user' and 'assistant' roles, starting with 'system', then 'user' and 
+    alternating (u/a/u/a/u...). The last message must be from 'user'.
+    """
+    prompt: List[str] = []
+
+    if messages[0]["role"] == "system":
+        content = "".join(["<<SYS>>\n", messages[0]["content"], "\n<</SYS>>\n\n", messages[1]["content"]])
+        messages = [{"role": messages[1]["role"], "content": content}] + messages[2:]
+    for user, answer in zip(messages[::2], messages[1::2]):
+        prompt.extend(["<s>", "[INST] ", (user["content"]).strip(), " [/INST] ", (answer["content"]).strip(), "</s>"])
+    prompt.extend(["<s>", "[INST] ", (messages[-1]["content"]).strip(), " [/INST] "])
+    return "".join(prompt)
 
 f = open("endpoint_name.txt", "r")
 endpoint_name = f.read()
@@ -25,14 +43,17 @@ class ContentHandler(LLMContentHandler):
     accepts = "application/json"
 
     def transform_input(self, prompt, model_kwargs):
-        input_str = json.dumps({"inputs" : [[
-        {"role" : "user", "content" : prompt}]],
-        "parameters" : {**model_kwargs}})
+        base_input = [{"role" : "user", "content" : prompt}]
+        optz_input = format_messages(base_input)
+        input_str = json.dumps({
+            "inputs" : optz_input, 
+            "parameters" : {**model_kwargs}
+        })
         return input_str.encode('utf-8')
     
     def transform_output(self, output):
         response_json = json.loads(output.read().decode("utf-8"))
-        return response_json[0]["generation"]["content"]
+        return response_json["generated_text"]
 
 class OutputParser(AgentOutputParser):
 
@@ -159,6 +180,28 @@ if len(msgs.messages) == 0 or st.sidebar.button("Reset chat history"):
     msgs.add_ai_message("How can I help you?")
     st.session_state.steps = {}
 
+st.sidebar.text("Need Suggestion to Chat??")
+
+# Replace the for loop that prints the suggestions in the sidebar with the following:
+suggestions = [
+    "Where was Fifa World Cup 2022 held?",
+    "Who won the cup?",
+    "Who won the 2023 Cricket World Cup?"
+]
+
+# Function to handle click on suggestion
+def handle_click(suggestion_text):
+    if 'clicked_text' not in st.session_state:
+        st.session_state.clicked_text = suggestion_text
+    else:
+        st.session_state.clicked_text += '\n' + suggestion_text
+    st.session_state.prompt = suggestion_text  # This will set the text in the main chat input box
+
+
+# Create buttons for suggestions
+for idx, suggestion in enumerate(suggestions):
+    st.sidebar.button(suggestion, key=f"suggestion_{idx}", on_click=handle_click, args=(suggestion,))
+
 avatars = {"human": "user", "ai": "assistant"}
 for idx, msg in enumerate(msgs.messages):
     with st.chat_message(avatars[msg.type]):
@@ -170,6 +213,18 @@ for idx, msg in enumerate(msgs.messages):
                 st.write(step[0].log)
                 st.write(step[1])
         st.write(msg.content)
+
+# In the main chat input area, check if there's clicked text to be used as prompt
+if 'clicked_text' in st.session_state:
+    prompt = st.session_state.clicked_text
+    print("Clicked Text", prompt)
+    del st.session_state['clicked_text']  
+    st.chat_message("user").write(prompt)
+    with st.chat_message("assistant"):
+        st_cb = StreamlitCallbackHandler(st.container(), expand_new_thoughts=False)
+        response = agent(prompt, callbacks=[st_cb])["output"]
+        response = re.sub("\{.*?\}","",response)
+        st.write(response)
 
 if prompt := st.chat_input(placeholder="Please ask me a question!"):
     st.chat_message("user").write(prompt)
