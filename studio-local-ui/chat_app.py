@@ -11,7 +11,9 @@ import streamlit as st
 from sagemaker import session
 import json
 import re
+import subprocess
 from typing import Dict, List
+
 
 def format_messages(messages: List[Dict[str, str]]) -> List[str]:
     """
@@ -172,7 +174,7 @@ few_shot = agent.agent.create_prompt(
 )
 agent.agent.llm_chain.prompt = few_shot
 
-agent.agent.llm_chain.prompt.messages[2].prompt.template = "[INST] Respond in JSON with 'step' and 'step_input' values until you return an 'step': 'Final Answer', along with the 'step_input'. [/INST] \nUser: {input}"
+agent.agent.llm_chain.prompt.messages[2].prompt.template = "<SYS> Respond in JSON with 'step' and 'step_input' values until you return an 'step': 'Final Answer', along with the 'step_input'. Only answer the question asked by the user and stop with 'Final Answer'. [/SYS] \nUser: [INST] {input} [/INST]"
 
 
 if len(msgs.messages) == 0 or st.sidebar.button("Reset chat history"):
