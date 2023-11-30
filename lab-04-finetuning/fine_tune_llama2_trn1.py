@@ -142,7 +142,7 @@ def prepare_dataset(dataset_name, destination_s3_uri):
 
     dolly_dataset = load_dataset(
         dataset_name, 
-        split="train[:10%]"
+        split="train[:3%]"
     )
 
     task = "information_extraction"
