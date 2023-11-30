@@ -34,14 +34,6 @@ PROMPT = (
     """Below is an instruction that describes a task, paired with an input that provides further context. Write a response that appropriately completes the request.\n\n### Instruction:\n{instruction}\n\n### Input:\n{context}### Response:\n{response}\n\n<s>"""
 )
 
-
-# temporary workaround until reinvent
-os.environ.update({
-    "AWS_JUMPSTART_CONTENT_BUCKET_OVERRIDE": "jumpstart-cache-alpha-us-west-2",
-    "AWS_JUMPSTART_GATED_CONTENT_BUCKET_OVERRIDE": "jumpstart-private-cache-prod-us-west-2",
-    "AWS_DATA_PATH": "/home/sagemaker-user/models"
-})
-
 ascii_banner = pyfiglet.figlet_format("Welcome to SageMaker Studio GenAI Workshop!!")
 print(ascii_banner)
 
