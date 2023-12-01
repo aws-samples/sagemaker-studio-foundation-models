@@ -13,6 +13,8 @@ import json
 import re
 import subprocess
 from typing import Dict, List
+from langchain.chains import ConversationChain
+from langchain.prompts.prompt import PromptTemplate
 
 
 def format_messages(messages: List[Dict[str, str]]) -> List[str]:
@@ -55,25 +57,8 @@ class ContentHandler(LLMContentHandler):
     
     def transform_output(self, output):
         response_json = json.loads(output.read().decode("utf-8"))
+        print("response_json", response_json)
         return response_json["generated_text"]
-
-class OutputParser(AgentOutputParser):
-
-    def parse(self, response):
-        try:
-            parsed_response=parse_json_markdown(response)
-            step, step_input = parsed_response["step"], parsed_response["step_input"]
-            if step == "Final Answer":
-                return AgentFinish({"output": step_input}, response)
-            else:
-                return AgentAction(step, step_input, response)
-        except:
-            return AgentFinish({"output": response}, response)
-        
-    def get_format_instructions(self):
-        return FORMAT_INSTRUCTIONS
-
-parser = OutputParser()
 
 st.set_page_config(page_title="LangChain: Chat with search and math", page_icon="🦜")
 st.title("🦜 LangChain: Chat with search and math")
@@ -81,129 +66,54 @@ st.title("🦜 LangChain: Chat with search and math")
 content_handler = ContentHandler()
 msgs = StreamlitChatMessageHistory()
 memory = ConversationBufferMemory(
-    chat_memory=msgs, return_messages=True, memory_key="chat_history", output_key="output"
+    chat_memory=msgs, return_messages=True, memory_key="history", ai_prefix="AI Assistant"
 )
-parser = OutputParser()
 
 llm=SagemakerEndpoint(
-             endpoint_name=endpoint_name, 
-             region_name=session.Session().boto_region_name, 
-             model_kwargs={"max_new_tokens": 700, "top_p": 0.9, "temperature": 0.6},
-             endpoint_kwargs={"CustomAttributes": custom_attributes},
-             content_handler=content_handler
-         )
+     endpoint_name=endpoint_name, 
+     region_name=session.Session().boto_region_name, 
+     model_kwargs={"max_new_tokens": 2000, "top_p": 0.9, "temperature": 0.6},
+     endpoint_kwargs={"CustomAttributes": custom_attributes},
+     content_handler=content_handler
+ )
 
-tools = load_tools(["llm-math", "wikipedia"], llm=llm)
 
-agent = initialize_agent(
-    agent="chat-conversational-react-description",
-    memory=memory,
+# Add sliders for Temperature, Top p, and Top k
+temperature = st.sidebar.slider("Temperature", 0.0, 1.0, 0.6, 0.1)
+top_p = st.sidebar.slider("Top p", 0.0, 0.99, 0.9, 0.1)
+
+# Function to reinitialize the conversation agent with new parameters
+def reinitialize_agent():
+    llm.model_kwargs.update({"temperature": temperature, "top_p": top_p})
+    memory.clear()
+    msgs.clear()  # Clear StreamlitChatMessageHistory
+    st.experimental_rerun()  # Rerun the script to reset the UI
+
+# Submit button
+if st.sidebar.button("Submit"):
+    reinitialize_agent()
+
+template = """The following is a friendly conversation between a human and an AI. The AI answers a user's question briefly and is only talkative when required.
+
+Current conversation:
+{history}
+
+Human: {input}
+AI Assistant:"""
+
+PROMPT = PromptTemplate(input_variables=["history", "input"], template=template)
+
+agent = ConversationChain(
+    prompt=PROMPT,
     llm=llm,
-    tools=tools,
     verbose=True,
-    agent_kwargs={
-        "output_parser": parser
-    }
+    memory=memory
 )
-
-system_message = """
-
-<>\n Assistant is designed to build JSON and answer a wide variety of User questions.
-
-Assistant must use JSON strings that contain "step" and "step_input" parameters. All of Assistant's communication is performed using this JSON format.
-
-Tools available to Assistant are:
-
-- "Wikipedia": Useful when you need a summary of a person, place, historical event, or other subject. Input is typically a noun, like a person, place, historical event, or another subject.
-  - To use the wikipedia tool, Assistant should format the JSON like the following before getting the response and returning to the user:
-    ```json
-    {{"step": "Wikipedia",
-      "step_input": "Statue of Liberty"}}
-    ```
-- "Calculator": Useful for when you need to answer questions about math. Input is one or more number combined with one or more math operations (addition, subtraction, multiplation, division, square root, exponetnial, and more).
-  - To use the calculator tool, Assistant should format the JSON like the following so before getting the response and returning to the user:
-    ```json
-    {{"step": "Calculator",
-      "step_input": "24*189"}}
-    ```
-
-Here is the set of previous interactions between the User and Assistant:
-
-User: Hi!
-Assistant: ```
-{{"step": "Final Answer",
- "step_input": "Hello! How can I assist today?"}}
-```
-User: What is 9 cubed?
-Assistant: ```
-{{"step": "Calculator",
- "step_input": "9**3"}}
-```
-User: 729
-Assistant: ```
-{{"step": "Final Answer",
- "step_input": "The answer to your question is 729."}}
-```
-User: Can you tell me about the Statue of Liberty?
-Assistant: ```
-{{"step": "Wikipedia",
- "step_input": "Statue of Liberty"}}
-```
-User: The Statue of Liberty is a colossal neoclassical sculpture on Liberty Island in New York Harbor in New York City, in the United States. The copper statue, a gift from the people of France, was designed by French sculptor Frédéric Auguste Bartholdi and its metal framework was built by Gustave Eiffel.
-Assistant: ```
-{{"step": "Final Answer",
- "step_input": "Sure! The Statue of Liberty is a colossal neoclassical sculpture on Liberty Island in New York Harbor in New York City, in the United States. The copper statue, a gift from the people of France, was designed by French sculptor Frédéric Auguste Bartholdi and its metal framework was built by Gustave Eiffel."}}
-```
-User: What is the square root of 81?
-Assistant: ```
-{{"step": "Calculator",
- "step_input": "sqrt(81)"}}
-```
-User: 9
-Assistant: ```
-{{"step": "Final Answer",
- "step_input": "The answer to your question is 9."}}
-```
-
-Assistant should use a tool only if needed, but if the assistant does use a tool, the result of the tool must always be returned back to the user with a "Final Answer" step. Only use the calculator if the 'step_input' includes numbers. \n<>\n\n
-"""
-
-few_shot = agent.agent.create_prompt(
-    system_message=system_message,
-    tools=tools
-)
-agent.agent.llm_chain.prompt = few_shot
-
-agent.agent.llm_chain.prompt.messages[2].prompt.template = "[INST] Respond in JSON with 'step' and 'step_input' values until you return an 'step': 'Final Answer', along with the 'step_input'. [/INST] \nUser: {input}"
-
 
 if len(msgs.messages) == 0 or st.sidebar.button("Reset chat history"):
     memory.clear()
     msgs.add_ai_message("How can I help you?")
     st.session_state.steps = {}
-
-st.sidebar.text("Need Suggestion to Chat??")
-
-# Replace the for loop that prints the suggestions in the sidebar with the following:
-suggestions = [
-    "how are you?",
-    "Tell me about the Empire Statue Building",
-    "Where in the world is Tokyo located",
-    "Who is the president of India?"
-]
-
-# Function to handle click on suggestion
-def handle_click(suggestion_text):
-    if 'clicked_text' not in st.session_state:
-        st.session_state.clicked_text = suggestion_text
-    else:
-        st.session_state.clicked_text += '\n' + suggestion_text
-    st.session_state.prompt = suggestion_text  # This will set the text in the main chat input box
-
-
-# Create buttons for suggestions
-for idx, suggestion in enumerate(suggestions):
-    st.sidebar.button(suggestion, key=f"suggestion_{idx}", on_click=handle_click, args=(suggestion,))
 
 avatars = {"human": "user", "ai": "assistant"}
 for idx, msg in enumerate(msgs.messages):
@@ -217,22 +127,10 @@ for idx, msg in enumerate(msgs.messages):
                 st.write(step[1])
         st.write(msg.content)
 
-# In the main chat input area, check if there's clicked text to be used as prompt
-if 'clicked_text' in st.session_state:
-    prompt = st.session_state.clicked_text
-    print("Clicked Text", prompt)
-    del st.session_state['clicked_text']  
-    st.chat_message("user").write(prompt)
-    with st.chat_message("assistant"):
-        st_cb = StreamlitCallbackHandler(st.container(), expand_new_thoughts=False)
-        response = agent(prompt, callbacks=[st_cb])["output"]
-        response = re.sub("\{.*?\}","",response)
-        st.write(response)
-
 if prompt := st.chat_input(placeholder="Please ask me a question!"):
     st.chat_message("user").write(prompt)
     with st.chat_message("assistant"):
         st_cb = StreamlitCallbackHandler(st.container(), expand_new_thoughts=False)
-        response = agent(prompt, callbacks=[st_cb])["output"]
+        response = agent.predict(input=prompt, callbacks=[st_cb])
         response = re.sub("\{.*?\}","",response)
         st.write(response)
