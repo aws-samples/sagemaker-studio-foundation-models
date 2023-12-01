@@ -60,8 +60,8 @@ class ContentHandler(LLMContentHandler):
         print("response_json", response_json)
         return response_json["generated_text"]
 
-st.set_page_config(page_title="LangChain: Chat with search and math", page_icon="🦜")
-st.title("🦜 LangChain: Chat with search and math")
+st.set_page_config(page_title="LangChain: Chat with Llama 2 13b", page_icon="🦜")
+st.title("🦜 LangChain: Chat with Llama 2 13b")
 
 content_handler = ContentHandler()
 msgs = StreamlitChatMessageHistory()
