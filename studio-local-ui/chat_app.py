@@ -47,7 +47,6 @@ class ContentHandler(LLMContentHandler):
     def transform_input(self, prompt, model_kwargs):
         base_input = [{"role" : "user", "content" : prompt}]
         optz_input = format_messages(base_input)
-        print(optz_input)
         input_str = json.dumps({
             "inputs" : optz_input, 
             "parameters" : {**model_kwargs}
