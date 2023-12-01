@@ -88,7 +88,7 @@ parser = OutputParser()
 llm=SagemakerEndpoint(
              endpoint_name=endpoint_name, 
              region_name=session.Session().boto_region_name, 
-             model_kwargs={"max_new_tokens": 2048, "top_p": 0.9, "temperature": 0.95},
+             model_kwargs={"max_new_tokens": 700, "top_p": 0.9, "temperature": 0.6},
              endpoint_kwargs={"CustomAttributes": custom_attributes},
              content_handler=content_handler
          )
