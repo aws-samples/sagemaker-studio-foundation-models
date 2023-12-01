@@ -88,7 +88,7 @@ parser = OutputParser()
 llm=SagemakerEndpoint(
              endpoint_name=endpoint_name, 
              region_name=session.Session().boto_region_name, 
-             model_kwargs={"max_new_tokens": 2048, "top_p": 0.1, "temperature": 0.2},
+             model_kwargs={"max_new_tokens": 2048, "top_p": 0.9, "temperature": 0.95},
              endpoint_kwargs={"CustomAttributes": custom_attributes},
              content_handler=content_handler
          )
@@ -174,7 +174,7 @@ few_shot = agent.agent.create_prompt(
 )
 agent.agent.llm_chain.prompt = few_shot
 
-agent.agent.llm_chain.prompt.messages[2].prompt.template = "[INST] Respond in JSON with 'action' and 'action_input' values until you return an 'action': 'final answer', along with the 'action_input'. [/INST] \nUser: {input}"
+agent.agent.llm_chain.prompt.messages[2].prompt.template = "[INST] Respond in JSON with 'step' and 'step_input' values until you return an 'step': 'Final Answer', along with the 'step_input'. [/INST] \nUser: {input}"
 
 
 if len(msgs.messages) == 0 or st.sidebar.button("Reset chat history"):
@@ -186,9 +186,10 @@ st.sidebar.text("Need Suggestion to Chat??")
 
 # Replace the for loop that prints the suggestions in the sidebar with the following:
 suggestions = [
-    "Can you tell me where Clyne Gardens is located?",
-    "How big is the garden?",
-    "What's so special about this garden?"
+    "how are you?",
+    "Tell me about the Empire Statue Building",
+    "Where in the world is Tokyo located",
+    "Who is the president of India?"
 ]
 
 # Function to handle click on suggestion
