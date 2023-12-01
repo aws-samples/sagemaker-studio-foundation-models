@@ -23,7 +23,7 @@ print(ascii_banner)
 sts_client = botocore.session.Session().create_client("sts")
 role_arn = sts_client.get_caller_identity().get("Arn")
 # conver assumed role to just role arn
-role = role_arn.replace('assumed-role', 'role').replace('/SageMaker', '')
+role = role_arn.replace('assumed-role', 'role').replace('/SageMaker', '').replace('sts', 'iam')
 print(f"Using role ---> ", role)
 
 
