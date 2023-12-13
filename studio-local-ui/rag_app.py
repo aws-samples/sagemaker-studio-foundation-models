@@ -18,8 +18,6 @@ import json
 import re
 from typing import Dict, List
 
-REGION = boto3.Session().region_name
-
 def format_messages(messages: List[Dict[str, str]]) -> List[str]:
     """
     Format messages for Llama-2 chat models.
@@ -60,7 +58,7 @@ class ContentHandler(LLMContentHandler):
     
     def transform_output(self, output):
         response_json = json.loads(output.read().decode("utf-8"))
-        return response_json[0]["generated_text"]
+        return response_json["generated_text"]
 
 _prefix = "Chat with your Documents using RAG" 
 st.set_page_config(page_title=f"SageMaker & LangChain: {_prefix}", page_icon="🦜")
@@ -72,14 +70,8 @@ msgs = StreamlitChatMessageHistory()
 llm=SagemakerEndpoint(
              endpoint_name=endpoint_name, 
              region_name=session.Session().boto_region_name, 
-             model_kwargs={
-                 "max_new_tokens": 512, 
-                 "top_p": 0.1, 
-                 "temperature": 0.1
-             },
-             endpoint_kwargs={
-                 "CustomAttributes": custom_attributes
-             },
+             model_kwargs={"max_new_tokens": 700, "top_p": 1.0, "temperature": 0.1},
+             endpoint_kwargs={"CustomAttributes": custom_attributes},
              content_handler=content_handler
          )
 
@@ -103,12 +95,12 @@ prompt_template = PromptTemplate(
 
 class EmbeddingGenerator:
     def __init__(self):
-        self.lambda_client = boto3.client('lambda', region_name=REGION)
+        self.lambda_client = boto3.client('lambda', region_name='us-west-2')
     
     def embed_query(self, input_text_sample):
         """Generate embeddings for the input text."""
         
-        lambda_client = boto3.client('lambda', region_name=REGION) 
+        lambda_client = boto3.client('lambda', region_name='us-west-2') 
         
         # Prepare the data to send to the Lambda function
         data = {
@@ -126,7 +118,7 @@ class EmbeddingGenerator:
         response_payload = json.loads(response['Payload'].read().decode("utf-8"))
 
         # Extract status and embeddings from the response.
-        status_code, embeddings = int(response_payload['statusCode']), json.loads(response_payload['body'])[0]
+        status_code, embeddings = int(response_payload['statusCode']), json.loads(response_payload['body'])
 
         return embeddings
 
