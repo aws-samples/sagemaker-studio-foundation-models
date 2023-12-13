@@ -5,6 +5,7 @@ This workshop is intended for audience that's looking to learn about building wi
 - Learn to build a chatbot using Llama 2 on Studio
 - Learn to Prompt Engineer a Model
 - Fine-tune a model with custom dataset on GPU/Trainium based instances
+- Host fine-tuned model on NVIDIA/Inferentia based instances
 
 
 ## Security
