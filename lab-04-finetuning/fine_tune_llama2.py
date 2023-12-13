@@ -1,5 +1,5 @@
 """
-python3 fine_tune_llama2_trn1.py \
+python3 fine_tune_llama2.py \
     --dataset_name=databricks/databricks-dolly-15k \
     --js_hf_model_id=meta-textgeneration-llama-2-7b \
     --js_hf_model_version=* \

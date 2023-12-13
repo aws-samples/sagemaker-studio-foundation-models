@@ -1,5 +1,5 @@
 """
-python3 deploy_llama2_inf2.py \
+python3 deploy_llama2.py \
     --endpoint_name=ft-meta-llama2-7b-chat-tg-ep \
     --instance_type=ml.g5.2xlarge
 """
