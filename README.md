@@ -4,8 +4,8 @@ This workshop is intended for audience that's looking to learn about building wi
 - Deploy a Llama 2 model from SageMaker Studio
 - Learn to build a chatbot using Llama 2 on Studio
 - Learn to Prompt Engineer a Model
-- Fine-tune a model with custom dataset on GPU/Trainium based instances
-
+- Fine-tune a model with custom dataset on GPU/Trainium instances
+- Deploy a fine-tuned model to NVIDIA/Inferentia instances for inference
 
 ## Security
 
