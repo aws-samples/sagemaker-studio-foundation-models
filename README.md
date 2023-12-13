@@ -1,11 +1,11 @@
-## My Project
+## SageMaker Studio Foundation Models Workshop Code
 
-TODO: Fill this README out!
+This workshop is intended for audience that's looking to learn about building with Large Language Models using Amazon SageMaker. This workshop walks you through
+- Deploy a Llama 2 model from SageMaker Studio
+- Learn to build a chatbot using Llama 2 on Studio
+- Learn to Prompt Engineer a Model
+- Fine-tune a model with custom dataset on GPU/Trainium based instances
 
-Be sure to:
-
-* Change the title in this README
-* Edit your repository description on GitHub
 
 ## Security
 

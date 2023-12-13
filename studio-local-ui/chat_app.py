@@ -58,10 +58,10 @@ class ContentHandler(LLMContentHandler):
     def transform_output(self, output):
         response_json = json.loads(output.read().decode("utf-8"))
         print("response_json", response_json)
-        return response_json["generated_text"].removesuffix('</s>')
+        return response_json[0]["generated_text"].removesuffix('</s>')
 
-st.set_page_config(page_title="LangChain: Chat with Llama 2 13b", page_icon="🦜")
-st.title("🦜 LangChain: Chat with Llama 2 13b")
+st.set_page_config(page_title="LangChain: Chat with Llama 2 Model", page_icon="🦜")
+st.title("🦜 LangChain: Chat with Llama 2 Model")
 
 content_handler = ContentHandler()
 msgs = StreamlitChatMessageHistory()
@@ -72,7 +72,7 @@ memory = ConversationBufferMemory(
 llm=SagemakerEndpoint(
      endpoint_name=endpoint_name, 
      region_name=session.Session().boto_region_name, 
-     model_kwargs={"max_new_tokens": 2000, "top_p": 0.9, "temperature": 0.6},
+     model_kwargs={"max_new_tokens": 200, "top_p": 0.1, "temperature": 0.2},
      endpoint_kwargs={"CustomAttributes": custom_attributes},
      content_handler=content_handler
  )
