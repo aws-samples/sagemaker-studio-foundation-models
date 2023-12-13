@@ -1,12 +1,12 @@
 """
 python3 fine_tune_llama2_trn1.py \
     --dataset_name=databricks/databricks-dolly-15k \
-    --js_hf_model_id=meta-textgenerationneuron-llama-2-13b \
-    --js_hf_model_version=1.* \
+    --js_hf_model_id=meta-textgeneration-llama-2-7b \
+    --js_hf_model_version=* \
     --max_steps=2 \
     --lr=0.0001 \
-    --batch_size=1000 \
-    --instance_type=ml.trn1.32xlarge
+    --batch_size=256 \
+    --instance_type=ml.g5.12xlarge
 """
 
 import os
@@ -142,7 +142,7 @@ def prepare_dataset(dataset_name, destination_s3_uri):
 
     dolly_dataset = load_dataset(
         dataset_name, 
-        split="train[:10%]"
+        split="train[:2%]"
     )
 
     task = "information_extraction"

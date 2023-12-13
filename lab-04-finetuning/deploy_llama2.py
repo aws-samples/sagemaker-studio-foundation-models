@@ -1,7 +1,7 @@
 """
 python3 deploy_llama2_inf2.py \
-    --endpoint_name=ft-meta-llama2-13b-neuron-chat-tg-ep \
-    --instance_type=ml.inf2.24xlarge
+    --endpoint_name=ft-meta-llama2-7b-chat-tg-ep \
+    --instance_type=ml.g5.2xlarge
 """
 
 import argparse
