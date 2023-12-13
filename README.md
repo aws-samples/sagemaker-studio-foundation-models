@@ -1,4 +1,4 @@
-## SageMaker Studio Foundation Models Workshop Code
+## My Project
 
 This workshop is intended for audience that's looking to learn about building with Large Language Models using Amazon SageMaker. This workshop walks you through
 - Deploy a Llama 2 model from SageMaker Studio
