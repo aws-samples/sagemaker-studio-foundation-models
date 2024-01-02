@@ -1,6 +1,11 @@
 """
-python3 fine_tune_llama2.py \
-    --dataset_name=databricks/databricks-dolly-15k 
+python3 local_fine_tune_llama2.py \
+    --dataset_name=databricks/databricks-dolly-15k \
+    --hf_model_id=Mikael110/llama-2-7b-guanaco-fp16 \
+    --epochs=1 \
+    --per_device_train_batch_size=1 \
+    --per_device_valid_batch_size=1 \
+    --logging_steps=1
 """
 
 import os
