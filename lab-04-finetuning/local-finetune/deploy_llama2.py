@@ -8,6 +8,7 @@ python3 deploy_llama2.py \
 
 import os
 import boto3
+import textwrap
 import argparse
 import pyfiglet
 import pprint
@@ -131,7 +132,7 @@ def deploy(user_args):
     os.makedirs(model_dir, exist_ok=True)
 
     # create and write serving properties file
-    serving_properties = f"""
+    serving_properties = textwrap.dedent(f"""
     engine = MPI
     option.tensor_parallel_degree = 1
     option.rolling_batch = auto
@@ -143,7 +144,8 @@ def deploy(user_args):
     option.rolling_batch=lmi-dist
     option.max_rolling_batch_prefill_tokens=1560
     option.s3url = {pretrained_s3_model_uri}
-    """.rstrip()
+    """).strip()
+
 
     with open(os.path.join(f"./{model_dir}", "serving.properties"), "w") as prop_file:
         prop_file.write(serving_properties)
