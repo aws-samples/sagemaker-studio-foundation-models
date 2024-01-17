@@ -12,7 +12,7 @@ This is a workshop that focuses on building with Generative AI (Foundation Model
 
 ## Workshop
 
-The link to workshop and related instructions is available here: [Building with Foundation Models on Amazon SageMaker Studio](https://catalog.us-east-1.prod.workshops.aws/workshops/e4083378-03f1-42bf-9b5d-ef0cc047655e/en-US)
+The link to workshop and related instructions is available here: [Building with Foundation Models on Amazon SageMaker Studio](https://catalog.us-east-1.prod.workshops.aws/workshops/e4083378-03f1-42bf-9b5d-ef0cc047655e/en-US).
 
 ## Pre-Requisites
 
