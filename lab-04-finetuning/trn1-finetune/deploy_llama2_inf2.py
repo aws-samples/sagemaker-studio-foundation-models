@@ -1,7 +1,7 @@
 """
-python3 deploy_llama2.py \
-    --endpoint_name=ft-meta-llama2-7b-chat-tg-ep \
-    --instance_type=ml.g5.2xlarge
+python3 deploy_llama2_inf2.py \
+    --endpoint_name=ft-meta-llama2-13b-neuron-chat-tg-ep \
+    --instance_type=ml.inf2.24xlarge
 """
 
 import argparse
@@ -23,7 +23,7 @@ print(ascii_banner)
 sts_client = botocore.session.Session().create_client("sts")
 role_arn = sts_client.get_caller_identity().get("Arn")
 # conver assumed role to just role arn
-role = role_arn.replace('assumed-role', 'role').replace('/SageMaker', '').replace('sts', 'iam')
+role = role_arn.replace('assumed-role', 'role').replace('/SageMaker', '')
 print(f"Using role ---> ", role)
 
 
@@ -93,4 +93,3 @@ if __name__ == "__main__":
     print("--------------------------------------------\n")
 
     deploy(user_args=args)
-
