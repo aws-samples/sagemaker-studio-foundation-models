@@ -18,28 +18,16 @@ from langchain.prompts.prompt import PromptTemplate
 
 
 def format_messages(messages: List[Dict[str, str]]) -> List[str]:
-    """
-    Format messages for Llama-2 chat models.
-    
-    The model only supports 'system', 'user' and 'assistant' roles, starting with 'system', then 'user' and 
-    alternating (u/a/u/a/u...). The last message must be from 'user'.
-    """
+    """Format instructions where conversation roles must alternate user/assistant/user/assistant/..."""
     prompt: List[str] = []
-
-    if messages[0]["role"] == "system":
-        content = "".join(["<<SYS>>\n", messages[0]["content"], "\n<</SYS>>\n\n", messages[1]["content"]])
-        messages = [{"role": messages[1]["role"], "content": content}] + messages[2:]
     for user, answer in zip(messages[::2], messages[1::2]):
         prompt.extend(["<s>", "[INST] ", (user["content"]).strip(), " [/INST] ", (answer["content"]).strip(), "</s>"])
     prompt.extend(["<s>", "[INST] ", (messages[-1]["content"]).strip(), " [/INST] "])
     return "".join(prompt)
 
+
 f = open("endpoint_name.txt", "r")
 endpoint_name = f.read()
-f.close()
-
-f = open("custom_attribute.txt", "r")
-custom_attributes = f.read()
 f.close()
 
 class ContentHandler(LLMContentHandler):
@@ -60,8 +48,9 @@ class ContentHandler(LLMContentHandler):
         print("response_json", response_json)
         return response_json[0]["generated_text"].removesuffix('</s>')
 
-st.set_page_config(page_title="LangChain: Chat with Llama 2 Model", page_icon="🦜")
-st.title("🦜 LangChain: Chat with Llama 2 Model")
+_model = "Mistral 7B-Instruct"
+st.set_page_config(page_title=f"LangChain: Chat with {_model} Model", page_icon="🦜")
+st.title(f"🦜 LangChain: Chat with {_model} Model")
 
 content_handler = ContentHandler()
 msgs = StreamlitChatMessageHistory()
@@ -73,7 +62,6 @@ llm=SagemakerEndpoint(
      endpoint_name=endpoint_name, 
      region_name=session.Session().boto_region_name, 
      model_kwargs={"max_new_tokens": 200, "top_p": 0.1, "temperature": 0.2},
-     endpoint_kwargs={"CustomAttributes": custom_attributes},
      content_handler=content_handler
  )
 
@@ -95,7 +83,14 @@ if st.sidebar.button("Submit"):
 
 template = """The following is a friendly conversation between a human and an AI. The AI answers a user's question briefly and is only talkative when required.
 
-Current conversation:
+Below is a small snippet of previous conversation between the AI and human,
+Human: Hello, AI!
+AI Assistant: Hello, how can I help you?
+
+Human: What's the Capitol of the United States of America?
+AI Assistant: Washington, D.C. Anything else I can help you with?
+
+Below is history of current conversation:
 {history}
 
 Human: {input}
