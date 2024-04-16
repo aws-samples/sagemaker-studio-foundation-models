@@ -1,0 +1,90 @@
+### Task
+Generate a SQL query to answer [QUESTION]{question}[/QUESTION]
+
+### Instructions
+- If you cannot answer the question with the available database schema, return 'I do not know'
+- You need to structure all SQL queries with Database, Schema and Table name like this "WWSOSAGEMAKERDEMODATABASE1"."AIRLINESDEMODATABASE"."<table>"."<column>"
+- All Databasebases, Schemas, Tables and Columns will need to be in quotes like "..."
+- If the question contains airport as codes like "IAD" or "XYZ" you need to use src_airport."Airport Code" 
+- If the user provides full names of the Airports like "John F Kennedy", "Dallas Airport" then use ILIKE or LIKE to filter for result
+- Here are some previous Question and SQL Answer pairs below that needs to be used as reference,
+
+    How many unique airports are in the United States?
+    
+    SELECT COUNT(DISTINCT "WWSOSAGEMAKERDEMODATABASE1"."AIRLINESDEMODATABASE"."src_airport"."AirportID")
+    FROM "WWSOSAGEMAKERDEMODATABASE1"."AIRLINESDEMODATABASE"."src_airport"
+    JOIN "WWSOSAGEMAKERDEMODATABASE1"."AIRLINESDEMODATABASE"."src_country" 
+    ON "WWSOSAGEMAKERDEMODATABASE1"."AIRLINESDEMODATABASE"."src_airport"."CountryID" = "WWSOSAGEMAKERDEMODATABASE1"."AIRLINESDEMODATABASE"."src_country"."CountryID"
+    WHERE "WWSOSAGEMAKERDEMODATABASE1"."AIRLINESDEMODATABASE"."src_country"."Country Name" = 'United States'
+    
+    
+    How many airports are located in Canada?
+    
+    SELECT COUNT(DISTINCT "WWSOSAGEMAKERDEMODATABASE1"."AIRLINESDEMODATABASE"."src_airport"."AirportID")
+    FROM "WWSOSAGEMAKERDEMODATABASE1"."AIRLINESDEMODATABASE"."src_airport"
+    JOIN "WWSOSAGEMAKERDEMODATABASE1"."AIRLINESDEMODATABASE"."src_country" 
+    ON "WWSOSAGEMAKERDEMODATABASE1"."AIRLINESDEMODATABASE"."src_airport"."CountryID" = "WWSOSAGEMAKERDEMODATABASE1"."AIRLINESDEMODATABASE"."src_country"."CountryID"
+    WHERE "WWSOSAGEMAKERDEMODATABASE1"."AIRLINESDEMODATABASE"."src_country"."Country Name" = 'Canada'
+    
+    How many flights were delayed on Jan 10 2022?
+    
+    SELECT COUNT(*)
+    FROM "WWSOSAGEMAKERDEMODATABASE1"."AIRLINESDEMODATABASE"."flight_departure_data"
+    WHERE "WWSOSAGEMAKERDEMODATABASE1"."AIRLINESDEMODATABASE"."flight_departure_data"."Departure Date" = '2022-01-10'
+    AND "WWSOSAGEMAKERDEMODATABASE1"."AIRLINESDEMODATABASE"."flight_departure_data"."Flight Status" = 'Delayed'
+
+
+### Database Schema
+This query will run on a database whose schema is represented in this string:
+
+CREATE SCHEMA WWSOSAGEMAKERDEMODATABASE1;
+
+USE WWSOSAGEMAKERDEMODATABASE1;
+
+CREATE TABLE src_gender (
+  Gender VARCHAR(255), -- Person's gender either Male or Female
+  GenderID INTEGER PRIMARY KEY -- Unique ID for each Gender
+);
+
+CREATE TABLE src_country (
+  `Airport Country Code` VARCHAR(255), -- 2 or 3 letter country code for Country used by Airlines ex: United States is US or Canada is CA
+  `Country Name` VARCHAR(255), -- Full country name ex: 'United States' or 'Canada'
+  Continents VARCHAR(255), -- Continent where this country is located, ex: 'North America' or 'South America'
+  CountryID INTEGER PRIMARY KEY -- Unique ID for each Country
+);
+
+CREATE TABLE src_passengers (
+  `Passenger ID` VARCHAR(255), -- Random hash assigned to a Passenger in lieu of First and Last Name
+  Age INTEGER, -- Age of the passenger 
+  Nationality VARCHAR(255), -- Nationality of the Passenger that matches with `src_country`.`Country Name`
+  FOREIGN KEY (GenderID) REFERENCES src_gender(GenderID), -- GenderID is supplied 
+  PassID INTEGER PRIMARY KEY, --  Unique ID for passengers
+);
+
+CREATE TABLE src_airport (
+  `Airport Name` VARCHAR(255), -- Full name of the airport
+  `Airport Continent` VARCHAR(255), -- 3 to 4 letter code for Continent where the Airport is located ex: North America is NAM
+  `Airport Code` VARCHAR(255), -- 3 to 4 letter code for Airport ex: Washington DC is IAD
+  AirportID INTEGER PRIMARY KEY, -- Unique ID for airport
+  FOREIGN KEY (CountryID) REFERENCES src_country(CountryID) -- CountryID is supplied 
+);
+
+CREATE TABLE flight_departure_data (
+  `Departure Date` VARCHAR(255), -- Departure Date in YYYY-MM-DD HH:MM:SS format
+  `Pilot Name` VARCHAR(255), -- Name of the Pilot flying the plane
+  `Flight Status` VARCHAR(255), -- Flight status 'On Time', 'Delayed' or 'Cancelled'
+  FOREIGN KEY (GenderID) REFERENCES src_gender(GenderID), -- GenderID is supplied
+  FOREIGN KEY (PassID) REFERENCES src_passengers(PassID), -- PassID is supplied
+  FOREIGN KEY (AirportID) REFERENCES src_airport(AirportID) -- AirportID is supplied
+);
+
+
+-- flight_departure_data.GenderID can be joined with src_gender.GenderID
+-- flight_departure_data.PassID can be joined with src_passengers.PassID
+-- flight_departure_data.AirportID can be joined with src_airport.AirportID
+-- src_passengers.GenderID can be joined with src_gender.GenderID
+-- src_airport.CountryID can be joined with src_country.CountryID
+
+### Answer
+Given the database schema, here is the SQL query that answers [QUESTION]{question}[/QUESTION]
+[SQL]
