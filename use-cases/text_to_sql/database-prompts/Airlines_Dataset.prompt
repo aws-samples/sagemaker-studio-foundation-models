@@ -3,7 +3,7 @@ Generate a SQL query to answer [QUESTION]{question}[/QUESTION]
 
 ### Instructions
 - If you cannot answer the question with the available database schema, return 'I do not know'
-- You need to structure all SQL queries with Database, Schema and Table name like this "WWSOSAGEMAKERDEMODATABASE1"."AIRLINESDEMODATABASE"."<table>"."<column>"
+- You need to structure all SQL queries with Database, Schema and Table name like this "TESTSAGEMAKERDEMODATABASE1"."AIRLINESDEMODATABASE"."<table>"."<column>"
 - All Databasebases, Schemas, Tables and Columns will need to be in quotes like "..."
 - If the question contains airport as codes like "IAD" or "XYZ" you need to use src_airport."Airport Code" 
 - If the user provides full names of the Airports like "John F Kennedy", "Dallas Airport" then use ILIKE or LIKE to filter for result
@@ -11,35 +11,35 @@ Generate a SQL query to answer [QUESTION]{question}[/QUESTION]
 
     How many unique airports are in the United States?
     
-    SELECT COUNT(DISTINCT "WWSOSAGEMAKERDEMODATABASE1"."AIRLINESDEMODATABASE"."src_airport"."AirportID")
-    FROM "WWSOSAGEMAKERDEMODATABASE1"."AIRLINESDEMODATABASE"."src_airport"
-    JOIN "WWSOSAGEMAKERDEMODATABASE1"."AIRLINESDEMODATABASE"."src_country" 
-    ON "WWSOSAGEMAKERDEMODATABASE1"."AIRLINESDEMODATABASE"."src_airport"."CountryID" = "WWSOSAGEMAKERDEMODATABASE1"."AIRLINESDEMODATABASE"."src_country"."CountryID"
-    WHERE "WWSOSAGEMAKERDEMODATABASE1"."AIRLINESDEMODATABASE"."src_country"."Country Name" = 'United States'
+    SELECT COUNT(DISTINCT "TESTSAGEMAKERDEMODATABASE1"."AIRLINESDEMODATABASE"."src_airport"."AirportID")
+    FROM "TESTSAGEMAKERDEMODATABASE1"."AIRLINESDEMODATABASE"."src_airport"
+    JOIN "TESTSAGEMAKERDEMODATABASE1"."AIRLINESDEMODATABASE"."src_country" 
+    ON "TESTSAGEMAKERDEMODATABASE1"."AIRLINESDEMODATABASE"."src_airport"."CountryID" = "TESTSAGEMAKERDEMODATABASE1"."AIRLINESDEMODATABASE"."src_country"."CountryID"
+    WHERE "TESTSAGEMAKERDEMODATABASE1"."AIRLINESDEMODATABASE"."src_country"."Country Name" = 'United States'
     
     
     How many airports are located in Canada?
     
-    SELECT COUNT(DISTINCT "WWSOSAGEMAKERDEMODATABASE1"."AIRLINESDEMODATABASE"."src_airport"."AirportID")
-    FROM "WWSOSAGEMAKERDEMODATABASE1"."AIRLINESDEMODATABASE"."src_airport"
-    JOIN "WWSOSAGEMAKERDEMODATABASE1"."AIRLINESDEMODATABASE"."src_country" 
-    ON "WWSOSAGEMAKERDEMODATABASE1"."AIRLINESDEMODATABASE"."src_airport"."CountryID" = "WWSOSAGEMAKERDEMODATABASE1"."AIRLINESDEMODATABASE"."src_country"."CountryID"
-    WHERE "WWSOSAGEMAKERDEMODATABASE1"."AIRLINESDEMODATABASE"."src_country"."Country Name" = 'Canada'
+    SELECT COUNT(DISTINCT "TESTSAGEMAKERDEMODATABASE1"."AIRLINESDEMODATABASE"."src_airport"."AirportID")
+    FROM "TESTSAGEMAKERDEMODATABASE1"."AIRLINESDEMODATABASE"."src_airport"
+    JOIN "TESTSAGEMAKERDEMODATABASE1"."AIRLINESDEMODATABASE"."src_country" 
+    ON "TESTSAGEMAKERDEMODATABASE1"."AIRLINESDEMODATABASE"."src_airport"."CountryID" = "TESTSAGEMAKERDEMODATABASE1"."AIRLINESDEMODATABASE"."src_country"."CountryID"
+    WHERE "TESTSAGEMAKERDEMODATABASE1"."AIRLINESDEMODATABASE"."src_country"."Country Name" = 'Canada'
     
     How many flights were delayed on Jan 10 2022?
     
     SELECT COUNT(*)
-    FROM "WWSOSAGEMAKERDEMODATABASE1"."AIRLINESDEMODATABASE"."flight_departure_data"
-    WHERE "WWSOSAGEMAKERDEMODATABASE1"."AIRLINESDEMODATABASE"."flight_departure_data"."Departure Date" = '2022-01-10'
-    AND "WWSOSAGEMAKERDEMODATABASE1"."AIRLINESDEMODATABASE"."flight_departure_data"."Flight Status" = 'Delayed'
+    FROM "TESTSAGEMAKERDEMODATABASE1"."AIRLINESDEMODATABASE"."flight_departure_data"
+    WHERE "TESTSAGEMAKERDEMODATABASE1"."AIRLINESDEMODATABASE"."flight_departure_data"."Departure Date" = '2022-01-10'
+    AND "TESTSAGEMAKERDEMODATABASE1"."AIRLINESDEMODATABASE"."flight_departure_data"."Flight Status" = 'Delayed'
 
 
 ### Database Schema
 This query will run on a database whose schema is represented in this string:
 
-CREATE SCHEMA WWSOSAGEMAKERDEMODATABASE1;
+CREATE SCHEMA TESTSAGEMAKERDEMODATABASE1;
 
-USE WWSOSAGEMAKERDEMODATABASE1;
+USE TESTSAGEMAKERDEMODATABASE1;
 
 CREATE TABLE src_gender (
   Gender VARCHAR(255), -- Person's gender either Male or Female
