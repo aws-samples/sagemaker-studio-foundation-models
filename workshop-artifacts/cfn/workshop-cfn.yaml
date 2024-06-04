@@ -556,12 +556,7 @@ Resources:
                 'body': json.dumps(resp),
                 'sample_length': len(resp)
             }
-
-
-      Environment:
-        Variables:
-          REGION: !Ref 'AWS::Region'
-  
+            
   # OpenSearch Setup with secrets
   ###################################################  
 
