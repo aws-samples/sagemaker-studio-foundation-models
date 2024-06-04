@@ -1182,53 +1182,53 @@ Resources:
       SourceSecurityGroupId:
         Ref: emrServiceSecurityGroup
   
-  EMRClusterServiceRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Statement:
-          - Action:
-              - sts:AssumeRole
-            Effect: Allow
-            Principal:
-              Service:
-                - elasticmapreduce.amazonaws.com
-        Version: '2012-10-17'
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AmazonEMRServicePolicy_v2
-      Path: "/"
-      Policies:
-        - PolicyName:
-            Fn::Sub: AllowEMRInstnaceProfilePolicy-${AWS::StackName}
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Effect: Allow
-                Action: "iam:PassRole"
-                Resource: !GetAtt EMRClusterinstanceProfileRole.Arn
+  # EMRClusterServiceRole:
+  #   Type: AWS::IAM::Role
+  #   Properties:
+  #     AssumeRolePolicyDocument:
+  #       Statement:
+  #         - Action:
+  #             - sts:AssumeRole
+  #           Effect: Allow
+  #           Principal:
+  #             Service:
+  #               - elasticmapreduce.amazonaws.com
+  #       Version: '2012-10-17'
+  #     ManagedPolicyArns:
+  #       - arn:aws:iam::aws:policy/service-role/AmazonEMRServicePolicy_v2
+  #     Path: "/"
+  #     Policies:
+  #       - PolicyName:
+  #           Fn::Sub: AllowEMRInstnaceProfilePolicy-${AWS::StackName}
+  #         PolicyDocument:
+  #           Version: '2012-10-17'
+  #           Statement:
+  #             - Effect: Allow
+  #               Action: "iam:PassRole"
+  #               Resource: !GetAtt EMRClusterinstanceProfileRole.Arn
   
-  EMRClusterinstanceProfileRole:
-    Properties:
-      RoleName:
-        Fn::Sub: "${AWS::StackName}-EMRClusterinstanceProfileRole"
-      AssumeRolePolicyDocument:
-        Statement:
-          - Action:
-              - sts:AssumeRole
-            Effect: Allow
-            Principal:
-              Service:
-                - ec2.amazonaws.com
-                - lambda.amazonaws.com
-        Version: '2012-10-17'
-      ManagedPolicyArns:
-        - !Sub "arn:${AWS::Partition}:iam::aws:policy/AmazonSageMakerFullAccess"
-        - !Sub "arn:${AWS::Partition}:iam::aws:policy/AmazonS3ReadOnlyAccess"
-        - !Sub "arn:${AWS::Partition}:iam::aws:policy/AmazonOpenSearchIngestionFullAccess"
-        - !Sub "arn:${AWS::Partition}:iam::aws:policy/AWSLambda_FullAccess"
-        - !Sub "arn:${AWS::Partition}:iam::aws:policy/SecretsManagerReadWrite"
-      Path: "/"
-    Type: AWS::IAM::Role
+  # EMRClusterinstanceProfileRole:
+  #   Properties:
+  #     RoleName:
+  #       Fn::Sub: "${AWS::StackName}-EMRClusterinstanceProfileRole"
+  #     AssumeRolePolicyDocument:
+  #       Statement:
+  #         - Action:
+  #             - sts:AssumeRole
+  #           Effect: Allow
+  #           Principal:
+  #             Service:
+  #               - ec2.amazonaws.com
+  #               - lambda.amazonaws.com
+  #       Version: '2012-10-17'
+  #     ManagedPolicyArns:
+  #       - !Sub "arn:${AWS::Partition}:iam::aws:policy/AmazonSageMakerFullAccess"
+  #       - !Sub "arn:${AWS::Partition}:iam::aws:policy/AmazonS3ReadOnlyAccess"
+  #       - !Sub "arn:${AWS::Partition}:iam::aws:policy/AmazonOpenSearchIngestionFullAccess"
+  #       - !Sub "arn:${AWS::Partition}:iam::aws:policy/AWSLambda_FullAccess"
+  #       - !Sub "arn:${AWS::Partition}:iam::aws:policy/SecretsManagerReadWrite"
+  #     Path: "/"
+  #   Type: AWS::IAM::Role
   
 
   AllowEMRClusterinstanceProfileRoleToAssumeSageMakerExecutionRole:
