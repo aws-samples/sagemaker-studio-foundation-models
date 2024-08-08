@@ -1,0 +1,6 @@
+transformers==4.41.0
+langchain==0.0.305
+sentence_transformers
+accelerate==0.28.0
+bitsandbytes==0.43.0
+peft==0.11.1
