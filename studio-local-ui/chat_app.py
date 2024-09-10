@@ -9,30 +9,42 @@ from langchain.output_parsers.json import parse_json_markdown
 from langchain.schema import AgentAction, AgentFinish
 import streamlit as st
 from sagemaker import session
+from datetime import datetime
 import json
 import re
 import subprocess
 from typing import Dict, List
 from langchain.chains import ConversationChain
 from langchain.prompts.prompt import PromptTemplate
+import warnings
+warnings.filterwarnings("ignore")
+
+
+GLOBAL_TEMPERATURE = 0.6
+GLOBAL_TOP_P = 0.7
 
 
 def format_messages(messages: List[Dict[str, str]]) -> List[str]:
     """
-    Format messages for Llama-2 chat models.
+    Format messages for Llama 3+ chat models.
     
     The model only supports 'system', 'user' and 'assistant' roles, starting with 'system', then 'user' and 
     alternating (u/a/u/a/u...). The last message must be from 'user'.
     """
-    prompt: List[str] = []
-
-    if messages[0]["role"] == "system":
-        content = "".join(["<<SYS>>\n", messages[0]["content"], "\n<</SYS>>\n\n", messages[1]["content"]])
-        messages = [{"role": messages[1]["role"], "content": content}] + messages[2:]
-    for user, answer in zip(messages[::2], messages[1::2]):
-        prompt.extend(["<s>", "[INST] ", (user["content"]).strip(), " [/INST] ", (answer["content"]).strip(), "</s>"])
-    prompt.extend(["<s>", "[INST] ", (messages[-1]["content"]).strip(), " [/INST] "])
-    return "".join(prompt)
+    # auto assistant suffix
+    # messages.append({"role": "assistant"})
+    
+    output = "<|begin_of_text|>"
+    # Adding the inferred prefix
+    _system_prefix = f"\n\nCutting Knowledge Date: December 2023\nToday Date: {datetime.now().strftime('%d %b %Y')}\n\n"
+    for i, entry in enumerate(messages):
+        output += f"<|start_header_id|>{entry['role']}<|end_header_id|>"
+        if i == 0:
+            output += f"{_system_prefix}{entry['content']}<|eot_id|>"
+        elif i >= 1 and 'content' in entry:
+            output += f"\n\n{entry['content']}<|eot_id|>"
+    output += "<|start_header_id|>assistant<|end_header_id|>\n"
+    return output
 
 f = open("endpoint_name.txt", "r")
 endpoint_name = f.read()
@@ -47,7 +59,16 @@ class ContentHandler(LLMContentHandler):
     accepts = "application/json"
 
     def transform_input(self, prompt, model_kwargs):
-        base_input = [{"role" : "user", "content" : prompt}]
+        base_input = [
+            {
+                "role" : "system", 
+                "content" : "You are a helpful ai assistant. You are polite and prioritize responses to a user in a friendly and helpful manner!"
+            },
+            {
+                "role" : "user", 
+                "content" : prompt
+            }
+        ]
         optz_input = format_messages(base_input)
         input_str = json.dumps({
             "inputs" : optz_input, 
@@ -58,33 +79,44 @@ class ContentHandler(LLMContentHandler):
     def transform_output(self, output):
         response_json = json.loads(output.read().decode("utf-8"))
         print("response_json", response_json)
-        return response_json[0]["generated_text"].removesuffix('</s>')
+        return response_json["generated_text"]
 
-st.set_page_config(page_title="LangChain: Chat with Llama 2 Model", page_icon="🦜")
-st.title("🦜 LangChain: Chat with Llama 2 Model")
+st.set_page_config(page_title="LangChain: Chat with Llama 3.1 8B Instruct Model", page_icon="🦜")
+st.title("🦜 LangChain: Chat with Llama 3.1 8B Instruct Model")
 
 content_handler = ContentHandler()
 msgs = StreamlitChatMessageHistory()
 memory = ConversationBufferMemory(
-    chat_memory=msgs, return_messages=True, memory_key="history", ai_prefix="AI Assistant"
+    chat_memory=msgs, 
+    return_messages=True, 
+    memory_key="history", 
+    ai_prefix="AI Assistant"
 )
 
 llm=SagemakerEndpoint(
      endpoint_name=endpoint_name, 
      region_name=session.Session().boto_region_name, 
-     model_kwargs={"max_new_tokens": 200, "top_p": 0.1, "temperature": 0.2},
-     endpoint_kwargs={"CustomAttributes": custom_attributes},
+     model_kwargs={
+         "max_new_tokens": 512, 
+         "top_p": GLOBAL_TOP_P, 
+         "temperature": GLOBAL_TEMPERATURE
+     },
      content_handler=content_handler
  )
 
 
 # Add sliders for Temperature, Top p, and Top k
-temperature = st.sidebar.slider("Temperature", 0.0, 1.0, 0.6, 0.1)
-top_p = st.sidebar.slider("Top p", 0.0, 0.99, 0.9, 0.1)
+temperature = st.sidebar.slider("Temperature", 0.0, 1.0, GLOBAL_TEMPERATURE, 0.1)
+top_p = st.sidebar.slider("Top p", 0.0, 1.00, GLOBAL_TOP_P, 0.1)
 
 # Function to reinitialize the conversation agent with new parameters
 def reinitialize_agent():
-    llm.model_kwargs.update({"temperature": temperature, "top_p": top_p})
+    llm.model_kwargs.update(
+        {
+            "temperature": temperature, 
+            "top_p": top_p
+        }
+    )
     memory.clear()
     msgs.clear()  # Clear StreamlitChatMessageHistory
     st.experimental_rerun()  # Rerun the script to reset the UI
@@ -132,5 +164,5 @@ if prompt := st.chat_input(placeholder="Please ask me a question!"):
     with st.chat_message("assistant"):
         st_cb = StreamlitCallbackHandler(st.container(), expand_new_thoughts=False)
         response = agent.predict(input=prompt, callbacks=[st_cb])
-        response = re.sub("\{.*?\}","",response)
+        # response = re.sub("\{.*?\}","",response)
         st.write(response)

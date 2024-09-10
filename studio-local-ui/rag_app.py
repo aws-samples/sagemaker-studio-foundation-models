@@ -16,26 +16,33 @@ import streamlit as st
 from sagemaker import session
 import json
 import re
+from datetime import datetime
 from typing import Dict, List
 
 REGION = boto3.Session().region_name
 
 def format_messages(messages: List[Dict[str, str]]) -> List[str]:
     """
-    Format messages for Llama-2 chat models.
+    Format messages for Llama 3+ chat models.
     
     The model only supports 'system', 'user' and 'assistant' roles, starting with 'system', then 'user' and 
     alternating (u/a/u/a/u...). The last message must be from 'user'.
     """
-    prompt: List[str] = []
+    # auto assistant suffix
+    # messages.append({"role": "assistant"})
+    
+    output = "<|begin_of_text|>"
+    # Adding the inferred prefix
+    _system_prefix = f"\n\nCutting Knowledge Date: December 2023\nToday Date: {datetime.now().strftime('%d %b %Y')}\n\n"
+    for i, entry in enumerate(messages):
+        output += f"<|start_header_id|>{entry['role']}<|end_header_id|>"
+        if i == 0:
+            output += f"{_system_prefix}{entry['content']}<|eot_id|>"
+        elif i >= 1 and 'content' in entry:
+            output += f"\n\n{entry['content']}<|eot_id|>"
+    output += "<|start_header_id|>assistant<|end_header_id|>\n"
+    return output
 
-    if messages[0]["role"] == "system":
-        content = "".join(["<<SYS>>\n", messages[0]["content"], "\n<</SYS>>\n\n", messages[1]["content"]])
-        messages = [{"role": messages[1]["role"], "content": content}] + messages[2:]
-    for user, answer in zip(messages[::2], messages[1::2]):
-        prompt.extend(["<s>", "[INST] ", (user["content"]).strip(), " [/INST] ", (answer["content"]).strip(), "</s>"])
-    prompt.extend(["<s>", "[INST] ", (messages[-1]["content"]).strip(), " [/INST] "])
-    return "".join(prompt)
 
 f = open("endpoint_name.txt", "r")
 endpoint_name = f.read()
@@ -50,7 +57,12 @@ class ContentHandler(LLMContentHandler):
     accepts = "application/json"
 
     def transform_input(self, prompt, model_kwargs):
-        base_input = [{"role" : "user", "content" : prompt}]
+        base_input = [
+            {
+                "role" : "user", 
+                "content" : prompt
+            }
+        ]
         optz_input = format_messages(base_input)
         input_str = json.dumps({
             "inputs" : optz_input, 
@@ -60,7 +72,7 @@ class ContentHandler(LLMContentHandler):
     
     def transform_output(self, output):
         response_json = json.loads(output.read().decode("utf-8"))
-        return response_json[0]["generated_text"]
+        return response_json["generated_text"]
 
 _prefix = "Chat with your Documents using RAG" 
 st.set_page_config(page_title=f"SageMaker & LangChain: {_prefix}", page_icon="🦜")
