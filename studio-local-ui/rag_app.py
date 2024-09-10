@@ -16,6 +16,7 @@ import streamlit as st
 from sagemaker import session
 import json
 import re
+from datetime import datetime
 from typing import Dict, List
 
 REGION = boto3.Session().region_name
@@ -41,6 +42,7 @@ def format_messages(messages: List[Dict[str, str]]) -> List[str]:
             output += f"\n\n{entry['content']}<|eot_id|>"
     output += "<|start_header_id|>assistant<|end_header_id|>\n"
     return output
+
 
 f = open("endpoint_name.txt", "r")
 endpoint_name = f.read()
